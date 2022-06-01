@@ -29,7 +29,7 @@ namespace RNN
         private static double[] Scale(double[] data)
         {
             var mu = data.Average();
-            var sigma = data.Sum(t => Math.Pow((t - mu), 2));
+            var sigma = data.Sum(t => Math.Pow((t - mu), 2)) / data.Length;
             for (var i = 0; i < data.Length; i++)
             {
                 data[i] = (data[i] - mu) / Math.Sqrt(sigma + 1e-08);

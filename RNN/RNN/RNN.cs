@@ -6,10 +6,10 @@ namespace RNN
 {
     public class RNN
     {
-        private readonly int inputCount = 10;
+        private readonly int inputCount = 48;
         private readonly int outputCount = 1;
         private readonly int memoryCount = 50;
-        private readonly int layersCount = 10;
+        private readonly int layersCount = 15;
         private Matrix Wxh;
         private Matrix Whh;
         private Matrix Why;
@@ -81,7 +81,8 @@ namespace RNN
                     Matrix result = null;
                     for (var t = 0; t < layersCount; t++)
                     {
-                        var newInput = Matrix.Copy(x);
+                        var newInput = Matrix.GetFilledMatrix(0, x.Rows, x.Columns);
+                        newInput[t, 0] = x[t, 0];
                         net = Wxh * newInput + Whh * previousActivation;
                         activation = Sigmoid(net);
                         result = Why * activation;
@@ -95,8 +96,7 @@ namespace RNN
                 loss /= yTrain.Count;
                 Console.WriteLine($"Epoch: {epoch + 1} Loss: {loss}");
 
-                if (loss < 1)
-                    return;
+                if (loss < 1) return;
             }
         }
 
@@ -130,10 +130,10 @@ namespace RNN
         {
             xTrain = new List<Matrix>();
             yTrain = new List<Matrix>();
-            for (var i = 0; i < data.Count - layersCount; i++)
+            for (var i = 0; i < data.Count - inputCount; i++)
             {
-                xTrain.Add(Matrix.GetMatrixFromData(data.Skip(i).Take(layersCount).ToList()));
-                yTrain.Add(Matrix.GetMatrixFromData(data.Skip(i + layersCount).Take(1).ToList()));
+                xTrain.Add(Matrix.GetMatrixFromData(data.Skip(i).Take(inputCount).ToList()));
+                yTrain.Add(Matrix.GetMatrixFromData(data.Skip(i + inputCount).Take(1).ToList()));
             }
         }
 
@@ -145,7 +145,7 @@ namespace RNN
             {
                 for (var j = 0; j < columns; j++)
                 {
-                    matrix[i, j] = rand.NextDouble() - 0.5;
+                    matrix[i, j] = rand.NextDouble();
                 }
             }
 
@@ -167,8 +167,7 @@ namespace RNN
         {
             for (var t = 0; t < layersCount; t++)
             {
-                var inputs = Matrix.GetFilledMatrix(0, x.Rows, x.Columns);
-                inputs[t, 0] = x[t, 0];
+                var inputs = Matrix.Copy(x);
                 outWxh = Wxh * inputs;
                 outWhh = Whh * previousActivation;
                 net = outWxh + outWhh;
@@ -201,7 +200,7 @@ namespace RNN
 
                     dWhh_i = Whh * layers[t]["previousActivation"];
                     dpreviousActivation = Whh.Transpose() * dres_Whh;
-
+                    
                     var newInput = Matrix.Copy(x);
                     dWxh_i = Wxh * newInput;
                     var dx = Wxh.Transpose() * dres_Wxh;
